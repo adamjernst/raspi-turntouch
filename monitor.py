@@ -55,6 +55,7 @@ class TurnTouch(gatt.Device):
         self.name = name
         self.controllers = controllers
         self.default_action = default_action
+        self.battery_status_characteristic = None
 
     def connect_succeeded(self):
         super().connect_succeeded()
@@ -66,23 +67,39 @@ class TurnTouch(gatt.Device):
 
     def services_resolved(self):
         super().services_resolved()
-        button_status_service = next(s for s in self.services
-                if s.uuid == '99c31523-dc4f-41b1-bb04-4e4deb81fadd')
+        button_status_service = next(
+            s for s in self.services
+            if s.uuid == '99c31523-dc4f-41b1-bb04-4e4deb81fadd'
+        )
 
-        self.button_status_characteristic = next(c for c in button_status_service.characteristics
-                if c.uuid == '99c31525-dc4f-41b1-bb04-4e4deb81fadd')
+        self.button_status_characteristic = next(
+            c for c in button_status_service.characteristics
+            if c.uuid == '99c31525-dc4f-41b1-bb04-4e4deb81fadd'
+        )
 
         self.button_status_characteristic.enable_notifications()
 
-        battery_status_service = next(s for s in self.services
-                if s.uuid.startswith('0000180f'))
+        battery_status_service = next(
+            s for s in self.services
+            if s.uuid.startswith('0000180f'),
+            None
+        )
 
-        self.battery_status_characteristic = next(c for c in battery_status_service.characteristics
-                if c.uuid.startswith('00002a19'))
-
-        self.battery_status_characteristic.read_value()
-        self.sched.add_job(self.battery_status_characteristic.read_value,
-                trigger='interval', minutes=1) #todo: reduce this
+        # Curiously, some Turn Touch remotes lack battery status.
+        # (Perhaps an outdated firmware revision?)
+        if battery_status_service is not None:
+            self.battery_status_characteristic = next(
+                c for c in battery_status_service.characteristics
+                if c.uuid.startswith('00002a19'),
+                None
+            )
+            if self.battery_status_characteristic is not None:
+                self.battery_status_characteristic.read_value()
+                self.sched.add_job(
+                    self.battery_status_characteristic.read_value,
+                    trigger='interval',
+                    minutes=1 #todo: reduce this
+                )
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         super().characteristic_enable_notifications_succeeded(characteristic)

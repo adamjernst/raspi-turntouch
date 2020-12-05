@@ -213,7 +213,7 @@ if __name__ == '__main__':
     else:
         try:
             with open('config.yml') as f:
-                config = yaml.load(f)
+                config = yaml.safe_load(f)
                 log('Config loaded: {}'.format(config))
         except Exception as e:
             config = []

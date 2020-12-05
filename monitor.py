@@ -46,7 +46,7 @@ class TurnTouch(gatt.Device):
 
     battery_notifications_sent = []
 
-    def __init__(self, mac_address, manager, buttons, name, controllers, default_action=None):
+    def __init__(self, mac_address, manager, buttons, name, controllers, default_action, press_only):
         super().__init__(mac_address, manager)
         self.sched = BackgroundScheduler()
         self.sched.start()
@@ -55,6 +55,7 @@ class TurnTouch(gatt.Device):
         self.name = name
         self.controllers = controllers
         self.default_action = default_action
+        self.press_only = press_only
         self.battery_status_characteristic = None
 
     def connect_succeeded(self):
@@ -116,6 +117,11 @@ class TurnTouch(gatt.Device):
             log('Battery status: {}%'.format(percentage))
             return
         if value == b'\xff\x00': #off
+            return
+        if self.press_only:
+            direction, action = self.button_codes[value].split(' ')
+            if action == 'Press':
+                self.perform(direction, action)
             return
         self.button_presses.append(value)
         if not self.listening:
@@ -231,7 +237,8 @@ if __name__ == '__main__':
                     buttons=c['buttons'],
                     name=c['name'],
                     controllers=controllers,
-                    default_action=c.get('default_action')
+                    default_action=c.get('default_action'),
+                    press_only=c.get('press_only', False)
             )
             log("Trying to connect to {} at {}...".format(c['name'], c['mac']))
             device.connect()

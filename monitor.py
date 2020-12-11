@@ -16,6 +16,7 @@ class TurnTouchDeviceManager(gatt.DeviceManager):
             "Discovered %s (%s)",
             device.mac_address, device.alias()
         )
+        device.connect()
 
     def make_device(self, mac_address):
         return TurnTouchDevice(mac_address=mac_address, manager=self)

@@ -12,7 +12,7 @@ logger = logging.getLogger('monitor')
 class TurnTouchDeviceManager(gatt.DeviceManager):
     def device_discovered(self, device):
         super().device_discovered(device)
-        logger.info("Discovered [%s] %s" % (device.mac_address, device.alias()))
+        logger.info("Discovered %s (%s)" % (device.mac_address, device.alias()))
 
     def make_device(self, mac_address):
         return TurnTouchDevice(mac_address=mac_address, manager=self)
@@ -41,11 +41,11 @@ class TurnTouchDevice(gatt.Device):
 
     def connect_succeeded(self):
         super().connect_succeeded()
-        logger.info("Connected: %s", self.mac_address)
+        logger.info("%s: Connected", self.mac_address)
 
     def connect_failed(self, error):
         super().connect_failed(error)
-        logger.info("Connecting to %s failed with error %s", self.mac_address, error)
+        logger.info("%s: Connecting failed with error %s", self.mac_address, error)
 
     def services_resolved(self):
         super().services_resolved()
@@ -85,17 +85,13 @@ class TurnTouchDevice(gatt.Device):
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         super().characteristic_enable_notifications_succeeded(characteristic)
-        logger.info("Characteristic notifications enabled for %s", self.mac_address)
+        logger.info("%s: Characteristic notifications enabled", self.mac_address)
 
     def characteristic_value_updated(self, characteristic, value):
         super().characteristic_value_updated(characteristic, value)
         if characteristic == self.battery_status_characteristic:
             percentage = int(int.from_bytes(value, byteorder='big') * 100/ 255)
-            key = 'battery_{}'.format(percentage)
-            if self.button_actions.get(key, False) and key not in self.battery_notifications_sent:
-                self.battery_notifications_sent.append(key)
-                self.perform('battery', str(percentage))
-            logger.info('Battery status for %s: %s%%', self.mac_address, percentage)
+            logger.info("%s: Battery status %s%%", self.mac_address, percentage)
             return
         if value == b'\xff\x00': #off
             return

@@ -12,7 +12,10 @@ logger = logging.getLogger('monitor')
 class TurnTouchDeviceManager(gatt.DeviceManager):
     def device_discovered(self, device):
         super().device_discovered(device)
-        logger.info("Discovered %s (%s)" % (device.mac_address, device.alias()))
+        logger.info(
+            "Discovered %s (%s)",
+            device.mac_address, device.alias()
+        )
 
     def make_device(self, mac_address):
         return TurnTouchDevice(mac_address=mac_address, manager=self)
@@ -45,7 +48,10 @@ class TurnTouchDevice(gatt.Device):
 
     def connect_failed(self, error):
         super().connect_failed(error)
-        logger.info("%s: Connecting failed with error %s", self.mac_address, error)
+        logger.info(
+            "%s: Connecting failed with error %s",
+            self.mac_address, error
+        )
 
     def services_resolved(self):
         super().services_resolved()
@@ -80,24 +86,32 @@ class TurnTouchDevice(gatt.Device):
                 self.sched.add_job(
                     self.battery_status_characteristic.read_value,
                     trigger='interval',
-                    minutes=1 #todo: reduce this
+                    minutes=1  # todo: reduce this
                 )
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         super().characteristic_enable_notifications_succeeded(characteristic)
-        logger.info("%s: Characteristic notifications enabled", self.mac_address)
+        logger.info(
+            "%s: Characteristic notifications enabled",
+            self.mac_address
+        )
 
     def characteristic_value_updated(self, characteristic, value):
         super().characteristic_value_updated(characteristic, value)
         if characteristic == self.battery_status_characteristic:
-            percentage = int(int.from_bytes(value, byteorder='big') * 100/ 255)
-            logger.info("%s: Battery status %s%%", self.mac_address, percentage)
+            percentage = int(int.from_bytes(
+                value, byteorder='big') * 100 / 255)
+            logger.info(
+                "%s: Battery status %s%%",
+                self.mac_address, percentage
+            )
             return
-        if value == b'\xff\x00': #off
+        if value == b'\xff\x00':  # off
             return
         direction, action = self.button_codes[value].split(' ')
         if action == 'Press':
             self.perform(direction, action)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -109,12 +123,9 @@ if __name__ == '__main__':
         level=logging.INFO)
 
     manager = TurnTouchDeviceManager(adapter_name='hci0')
-    manager.start_discovery([BUTTON_STATUS_SERVICE_UUID])
-
-    # device = TurnTouch(
-    #     mac_address=c['mac'],
-    #     manager=manager,
-    # )
-    # logger.info("Trying to connect to {} at {}...".format(c['name'], c['mac']))
-    # device.connect()
+    manager.start_discovery([
+        BUTTON_STATUS_SERVICE_UUID,
+        # 1523 is a shorter identifier that TurnTouch Mac also scans for:
+        "1523",
+    ])
     manager.run()

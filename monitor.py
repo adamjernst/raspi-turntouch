@@ -5,18 +5,10 @@ import logging
 
 BUTTON_CODES = {
     b'\xff\x00': 'Off',
-    b'\xfe\x00': 'North Press',
-    b'\xef\x00': 'North Double',
-    b'\xfe\xff': 'North Hold',
-    b'\xfd\x00': 'East Press',
-    b'\xdf\x00': 'East Double',
-    b'\xfd\xff': 'East Hold',
-    b'\xfb\x00': 'West Press',
-    b'\xbf\x00': 'West Double',
-    b'\xfb\xff': 'West Hold',
-    b'\xf7\x00': 'South Press',
-    b'\x7f\x00': 'South Double',
-    b'\xf7\xff': 'South Hold'
+    b'\xfe\x00': 'North',
+    b'\xfd\x00': 'East',
+    b'\xfb\x00': 'West',
+    b'\xf7\x00': 'South',
 }
 BUTTON_STATUS_SERVICE_UUID = '99c31523-dc4f-41b1-bb04-4e4deb81fadd'
 
@@ -99,11 +91,8 @@ class TurnTouchDevice(gatt.Device):
         if value not in BUTTON_CODES:
             logger.warn("%s: Saw value not in button codes", self.mac_address)
             return
-        if value == b'\xff\x00':  # off
-            return
-        direction, action = BUTTON_CODES[value].split(' ')
-        if action == 'Press':
-            self.perform(direction, action)
+        button = BUTTON_CODES[value]
+        logger.info("%s: Button %s", self.mac_address, button)
 
 
 if __name__ == '__main__':

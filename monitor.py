@@ -12,10 +12,7 @@ logger = logging.getLogger('monitor')
 class TurnTouchDeviceManager(gatt.DeviceManager):
     def device_discovered(self, device):
         super().device_discovered(device)
-        logger.info(
-            "Discovered %s (%s)",
-            device.mac_address, device.alias()
-        )
+        logger.info("Discovered %s (%s)", device.mac_address, device.alias())
         device.connect()
 
     def make_device(self, mac_address):
@@ -49,10 +46,7 @@ class TurnTouchDevice(gatt.Device):
 
     def connect_failed(self, error):
         super().connect_failed(error)
-        logger.info(
-            "%s: Connecting failed with error %s",
-            self.mac_address, error
-        )
+        logger.info("%s: Connecting failed with error %s", self.mac_address, error)
 
     def services_resolved(self):
         super().services_resolved()
@@ -69,8 +63,10 @@ class TurnTouchDevice(gatt.Device):
         self.button_status_characteristic.enable_notifications()
 
         battery_status_service = next(
-            s for s in self.services
-            if s.uuid.startswith('0000180f'),
+            (
+                s for s in self.services
+                if s.uuid.startswith('0000180f')
+            ),
             None
         )
 
@@ -78,8 +74,10 @@ class TurnTouchDevice(gatt.Device):
         # (Perhaps an outdated firmware revision?)
         if battery_status_service is not None:
             self.battery_status_characteristic = next(
-                c for c in battery_status_service.characteristics
-                if c.uuid.startswith('00002a19'),
+                (
+                    c for c in battery_status_service.characteristics
+                    if c.uuid.startswith('00002a19')
+                ),
                 None
             )
             if self.battery_status_characteristic is not None:
@@ -92,20 +90,13 @@ class TurnTouchDevice(gatt.Device):
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         super().characteristic_enable_notifications_succeeded(characteristic)
-        logger.info(
-            "%s: Characteristic notifications enabled",
-            self.mac_address
-        )
+        logger.info("%s: Characteristic notifications enabled", self.mac_address)
 
     def characteristic_value_updated(self, characteristic, value):
         super().characteristic_value_updated(characteristic, value)
         if characteristic == self.battery_status_characteristic:
-            percentage = int(int.from_bytes(
-                value, byteorder='big') * 100 / 255)
-            logger.info(
-                "%s: Battery status %s%%",
-                self.mac_address, percentage
-            )
+            percentage = int(int.from_bytes(value, byteorder='big') * 100 / 255)
+            logger.info("%s: Battery status %s%%", self.mac_address, percentage)
             return
         if value == b'\xff\x00':  # off
             return

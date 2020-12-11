@@ -109,10 +109,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
 
-    logging.basicConfig(
-        format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-        datefmt='%H:%M:%S',
-        level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
     manager = TurnTouchDeviceManager(adapter_name='hci0')
     manager.start_discovery([

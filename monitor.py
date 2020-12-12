@@ -1,6 +1,7 @@
 import argparse
 import gatt
 import logging
+from bitstring import BitArray
 
 
 BUTTON_CODES = {
@@ -89,6 +90,8 @@ class TurnTouchDevice(gatt.Device):
         #     return
         # button = BUTTON_CODES[value]
         # logger.info("%s: Button %s", self.mac_address, button)
+        logger.info("%s: bits: %s", self.mac_address, BitArray(hex=value.hex()).bin)
+
         buttons = ~(int.from_bytes(value, "little") & 0xF)
         logger.info("Buttons: %x", buttons)
         bset = set()
@@ -105,7 +108,7 @@ class TurnTouchDevice(gatt.Device):
         if south:
             bset.add("south")
         if len(bset) == 0:
-            logger.info("%s: No buttons")
+            logger.info("%s: No buttons", self.mac_address)
         else:
             logger.info("%s: Buttons = %s", self.mac_address, ", ".join(bset))
 

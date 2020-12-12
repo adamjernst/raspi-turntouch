@@ -18,7 +18,7 @@ logger = logging.getLogger("monitor")
 class TurnTouchDeviceManager(gatt.DeviceManager):
     def device_discovered(self, device):
         super().device_discovered(device)
-        logger.info("Discovered %s (%s)", device.mac_address, device.alias())
+        logger.info("Discovered %s (%s), connecting...", device.mac_address, device.alias())
         device.connect()
 
     def make_device(self, mac_address):

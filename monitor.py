@@ -4,16 +4,15 @@ import logging
 
 
 BUTTON_CODES = {
-    b'\xff\x00': 'Off',
-    b'\xfe\x00': 'North',
-    b'\xfd\x00': 'East',
-    b'\xfb\x00': 'West',
-    b'\xf7\x00': 'South',
+    b"\xff\x00": "Off",
+    b"\xfe\x00": "North",
+    b"\xfd\x00": "East",
+    b"\xfb\x00": "West",
+    b"\xf7\x00": "South",
 }
-BUTTON_STATUS_SERVICE_UUID = '99c31523-dc4f-41b1-bb04-4e4deb81fadd'
+BUTTON_STATUS_SERVICE_UUID = "99c31523-dc4f-41b1-bb04-4e4deb81fadd"
 
-
-logger = logging.getLogger('monitor')
+logger = logging.getLogger("monitor")
 
 
 class TurnTouchDeviceManager(gatt.DeviceManager):
@@ -41,23 +40,19 @@ class TurnTouchDevice(gatt.Device):
     def services_resolved(self):
         super().services_resolved()
         button_status_service = next(
-            s for s in self.services
-            if s.uuid == BUTTON_STATUS_SERVICE_UUID
+            s for s in self.services if s.uuid == BUTTON_STATUS_SERVICE_UUID
         )
 
         self.button_status_characteristic = next(
-            c for c in button_status_service.characteristics
-            if c.uuid == '99c31525-dc4f-41b1-bb04-4e4deb81fadd'
+            c
+            for c in button_status_service.characteristics
+            if c.uuid == "99c31525-dc4f-41b1-bb04-4e4deb81fadd"
         )
 
         self.button_status_characteristic.enable_notifications()
 
         battery_status_service = next(
-            (
-                s for s in self.services
-                if s.uuid.startswith('0000180f')
-            ),
-            None
+            (s for s in self.services if s.uuid.startswith("0000180f")), None
         )
 
         # Curiously, some Turn Touch remotes lack battery status.
@@ -65,17 +60,18 @@ class TurnTouchDevice(gatt.Device):
         if battery_status_service is not None:
             self.battery_status_characteristic = next(
                 (
-                    c for c in battery_status_service.characteristics
-                    if c.uuid.startswith('00002a19')
+                    c
+                    for c in battery_status_service.characteristics
+                    if c.uuid.startswith("00002a19")
                 ),
-                None
+                None,
             )
             if self.battery_status_characteristic is not None:
                 self.battery_status_characteristic.read_value()
                 self.sched.add_job(
                     self.battery_status_characteristic.read_value,
-                    trigger='interval',
-                    minutes=1  # todo: reduce this
+                    trigger="interval",
+                    minutes=1,  # todo: reduce this
                 )
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
@@ -85,7 +81,7 @@ class TurnTouchDevice(gatt.Device):
     def characteristic_value_updated(self, characteristic, value):
         super().characteristic_value_updated(characteristic, value)
         if characteristic == self.battery_status_characteristic:
-            percentage = int(int.from_bytes(value, byteorder='big') * 100 / 255)
+            percentage = int(int.from_bytes(value, byteorder="big") * 100 / 255)
             logger.info("%s: Battery status %s%%", self.mac_address, percentage)
             return
         if value not in BUTTON_CODES:
@@ -95,16 +91,18 @@ class TurnTouchDevice(gatt.Device):
         logger.info("%s: Button %s", self.mac_address, button)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
 
-    manager = TurnTouchDeviceManager(adapter_name='hci0')
-    manager.start_discovery([
-        BUTTON_STATUS_SERVICE_UUID,
-        # 1523 is a shorter identifier that TurnTouch Mac also scans for:
-        "1523",
-    ])
+    manager = TurnTouchDeviceManager(adapter_name="hci0")
+    manager.start_discovery(
+        [
+            BUTTON_STATUS_SERVICE_UUID,
+            # 1523 is a shorter identifier that TurnTouch Mac also scans for:
+            "1523",
+        ]
+    )
     manager.run()

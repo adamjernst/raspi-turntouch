@@ -98,13 +98,13 @@ class TurnTouchDevice(gatt.Device):
         north = buttons & (1 << 0)
         if north:
             bset.add("north")
-        east = buttons & (1 << 0)
+        east = buttons & (1 << 1)
         if east:
             bset.add("east")
-        west = buttons & (1 << 0)
+        west = buttons & (1 << 2)
         if west:
             bset.add("west")
-        south = buttons & (1 << 0)
+        south = buttons & (1 << 3)
         if south:
             bset.add("south")
         if len(bset) == 0:

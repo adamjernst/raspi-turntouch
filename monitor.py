@@ -1,7 +1,6 @@
 import argparse
 import gatt
 import logging
-from bitstring import BitArray
 
 BUTTON_STATUS_SERVICE_UUID = "99c31523-dc4f-41b1-bb04-4e4deb81fadd"
 

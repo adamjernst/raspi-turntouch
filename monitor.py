@@ -3,14 +3,6 @@ import gatt
 import logging
 from bitstring import BitArray
 
-
-BUTTON_CODES = {
-    b"\xff\x00": "Off",
-    b"\xfe\x00": "North",
-    b"\xfd\x00": "East",
-    b"\xfb\x00": "West",
-    b"\xf7\x00": "South",
-}
 BUTTON_STATUS_SERVICE_UUID = "99c31523-dc4f-41b1-bb04-4e4deb81fadd"
 
 logger = logging.getLogger("monitor")
@@ -85,15 +77,7 @@ class TurnTouchDevice(gatt.Device):
             percentage = int(int.from_bytes(value, byteorder="big") * 100 / 255)
             logger.info("%s: Battery status %s%%", self.mac_address, percentage)
             return
-        # if value not in BUTTON_CODES:
-        #     logger.warning("%s: Saw value not in button codes", self.mac_address)
-        #     return
-        # button = BUTTON_CODES[value]
-        # logger.info("%s: Button %s", self.mac_address, button)
-        logger.info("%s: bits: %s", self.mac_address, BitArray(hex=value.hex()).bin)
-
         buttons = ~int.from_bytes(value, "little") & 0xF
-        logger.info("Buttons: %x", buttons)
         bset = set()
         north = buttons & (1 << 0)
         if north:

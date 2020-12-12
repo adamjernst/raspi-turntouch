@@ -84,11 +84,29 @@ class TurnTouchDevice(gatt.Device):
             percentage = int(int.from_bytes(value, byteorder="big") * 100 / 255)
             logger.info("%s: Battery status %s%%", self.mac_address, percentage)
             return
-        if value not in BUTTON_CODES:
-            logger.warn("%s: Saw value not in button codes", self.mac_address)
-            return
-        button = BUTTON_CODES[value]
-        logger.info("%s: Button %s", self.mac_address, button)
+        # if value not in BUTTON_CODES:
+        #     logger.warning("%s: Saw value not in button codes", self.mac_address)
+        #     return
+        # button = BUTTON_CODES[value]
+        # logger.info("%s: Button %s", self.mac_address, button)
+        buttons = int.from_bytes(value, "little") & 0xFF
+        bset = set()
+        north = buttons & (1 << 0)
+        if north:
+            bset.add("north")
+        east = buttons & (1 << 0)
+        if east:
+            bset.add("east")
+        west = buttons & (1 << 0)
+        if west:
+            bset.add("west")
+        south = buttons & (1 << 0)
+        if south:
+            bset.add("south")
+        if len(bset) == 0:
+            logger.info("%s: No buttons")
+        else:
+            logger.info("%s: Buttons = %s", self.mac_address, ", ".join(bset))
 
 
 if __name__ == "__main__":

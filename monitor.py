@@ -123,4 +123,5 @@ if __name__ == "__main__":
             "1523",
         ]
     )
+    logger.info("Started discovery, running event loop...")
     manager.run()

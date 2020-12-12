@@ -92,7 +92,7 @@ class TurnTouchDevice(gatt.Device):
         # logger.info("%s: Button %s", self.mac_address, button)
         logger.info("%s: bits: %s", self.mac_address, BitArray(hex=value.hex()).bin)
 
-        buttons = ~(int.from_bytes(value, "little") & 0xF)
+        buttons = ~int.from_bytes(value, "little") & 0xF
         logger.info("Buttons: %x", buttons)
         bset = set()
         north = buttons & (1 << 0)

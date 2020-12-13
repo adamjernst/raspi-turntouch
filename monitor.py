@@ -1,6 +1,7 @@
 import argparse
 import gatt
 import logging
+import paho.mqtt.client as mqtt
 
 BUTTON_STATUS_SERVICE_UUID = "99c31523-dc4f-41b1-bb04-4e4deb81fadd"
 
@@ -8,16 +9,27 @@ logger = logging.getLogger("monitor")
 
 
 class TurnTouchDeviceManager(gatt.DeviceManager):
+    def __init__(self, mqtt_client, **kwargs):
+        super().__init__(**kwargs)
+        self.mqtt_client = mqtt_client
+
     def device_discovered(self, device):
         super().device_discovered(device)
-        logger.info("Discovered %s (%s), connecting...", device.mac_address, device.alias())
+        logger.info(
+            "Discovered %s (%s), connecting...", device.mac_address, device.alias()
+        )
         device.connect()
 
     def make_device(self, mac_address):
-        return TurnTouchDevice(mac_address=mac_address, manager=self)
+        return TurnTouchDevice(
+            mac_address=mac_address, manager=self, mqtt_client=mqtt_client
+        )
 
 
 class TurnTouchDevice(gatt.Device):
+    def __init__(self, mqtt_client, **kwargs):
+        super().__init__(**kwargs)
+        self.mqtt_client = mqtt_client
 
     battery_status_characteristic = None
 
@@ -96,13 +108,31 @@ class TurnTouchDevice(gatt.Device):
             logger.info("%s: Buttons = %s", self.mac_address, ", ".join(bset))
 
 
+def on_mqtt_connect(client, userdata, flags, rc):
+    logger.info("MQTT connect result is %s", mqtt.connack_string(rc))
+
+
+def on_mqtt_disconnect(client, userdata, rc):
+    logger.info("MQTT disconnect result is %d", rc)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
 
-    manager = TurnTouchDeviceManager(adapter_name="hci0")
+    mqtt_client = mqtt.Client()
+    # mqtt_client.on_connect = on_mqtt_connect
+    # mqtt_client.on_disconnect = on_mqtt_disconnect
+    mqtt_client.enable_logger()
+    mqtt_client.connect_async("192.168.1.76")
+    mqtt_client.loop_start()
+
+    manager = TurnTouchDeviceManager(
+        adapter_name="hci0",
+        mqtt_client=mqtt_client,
+    )
     manager.start_discovery(
         [
             BUTTON_STATUS_SERVICE_UUID,

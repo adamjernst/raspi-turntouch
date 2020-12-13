@@ -32,6 +32,7 @@ class TurnTouchDevice(gatt.Device):
     def __init__(self, mqtt_client, **kwargs):
         super().__init__(**kwargs)
         self.mqtt_client = mqtt_client
+        self.mqtt_safe_address = self.mac_address.replace(":", "")
 
     battery_status_characteristic = None
     pressed = set()  # of direction strings
@@ -48,12 +49,12 @@ class TurnTouchDevice(gatt.Device):
         for d in DIRECTIONS.values():
             self.mqtt_client.publish(
                 "homeassistant/device_automation/{}/{}/config".format(
-                    self.mac_address, d
+                    self.mqtt_safe_address, d
                 ),
                 json.dumps(
                     {
                         "automation_type": "trigger",
-                        "topic": "tt/{}/{}".format(self.mac_address, d),
+                        "topic": "tt/{}/{}".format(self.mqtt_safe_address, d),
                         "type": "pressed",
                         "subtype": d,
                         "device": device,
@@ -121,7 +122,7 @@ class TurnTouchDevice(gatt.Device):
         for direction in new_pressed - self.pressed:
             logger.info("%s: Pressed %s", self.mac_address, direction)
             self.mqtt_client.publish(
-                "tt/{}/{}".format(self.mac_address, direction),
+                "tt/{}/{}".format(self.mqtt_safe_address, direction),
                 "",
             )
         for direction in self.pressed - new_pressed:

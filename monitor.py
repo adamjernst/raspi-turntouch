@@ -120,11 +120,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     mqtt_client = mqtt.Client()
-    # mqtt_client.on_connect = on_mqtt_connect
-    # mqtt_client.on_disconnect = on_mqtt_disconnect
+    mqtt_client.on_connect = on_mqtt_connect
+    mqtt_client.on_disconnect = on_mqtt_disconnect
     mqtt_client.enable_logger()
     mqtt_client.connect_async("192.168.1.76")
     mqtt_client.loop_start()

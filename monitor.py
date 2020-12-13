@@ -1,9 +1,11 @@
 import argparse
 import gatt
 import logging
+import json
 import paho.mqtt.client as mqtt
 
 BUTTON_STATUS_SERVICE_UUID = "99c31523-dc4f-41b1-bb04-4e4deb81fadd"
+DIRECTIONS = {0: "north", 1: "east", 2: "west", 3: "south"}
 
 logger = logging.getLogger("monitor")
 
@@ -32,10 +34,33 @@ class TurnTouchDevice(gatt.Device):
         self.mqtt_client = mqtt_client
 
     battery_status_characteristic = None
+    pressed = set()  # of direction strings
 
     def connect_succeeded(self):
         super().connect_succeeded()
         logger.info("%s: Connected", self.mac_address)
+
+        device = {
+            "identifiers": self.mac_address,
+            "manufacturer": "Turn Touch",
+            "model": "Remote",
+        }
+        for d in DIRECTIONS.values():
+            self.mqtt_client.publish(
+                "homeassistant/device_automation/{}/{}/config".format(
+                    self.mac_address, d
+                ),
+                json.dumps(
+                    {
+                        "automation_type": "trigger",
+                        "topic": "tt/{}/{}".format(self.mac_address, d),
+                        "type": "pressed",
+                        "subtype": d,
+                        "device": device,
+                    }
+                ),
+                retain=True,
+            )
 
     def connect_failed(self, error):
         super().connect_failed(error)
@@ -89,23 +114,19 @@ class TurnTouchDevice(gatt.Device):
             logger.info("%s: Battery status %s%%", self.mac_address, percentage)
             return
         buttons = ~int.from_bytes(value, "little") & 0xF
-        bset = set()
-        north = buttons & (1 << 0)
-        if north:
-            bset.add("north")
-        east = buttons & (1 << 1)
-        if east:
-            bset.add("east")
-        west = buttons & (1 << 2)
-        if west:
-            bset.add("west")
-        south = buttons & (1 << 3)
-        if south:
-            bset.add("south")
-        if len(bset) == 0:
-            logger.info("%s: No buttons", self.mac_address)
-        else:
-            logger.info("%s: Buttons = %s", self.mac_address, ", ".join(bset))
+        new_pressed = set()
+        for (bit, name) in DIRECTIONS.items():
+            if buttons & (1 << bit):
+                new_pressed.add(name)
+        for direction in new_pressed - self.pressed:
+            logger.info("%s: Pressed %s", self.mac_address, direction)
+            self.mqtt_client.publish(
+                "tt/{}/{}".format(self.mac_address, direction),
+                "",
+            )
+        for direction in self.pressed - new_pressed:
+            logger.info("%s: Released %s", self.mac_address, direction)
+        self.pressed = new_pressed
 
 
 def on_mqtt_connect(client, userdata, flags, rc):

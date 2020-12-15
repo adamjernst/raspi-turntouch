@@ -7,6 +7,8 @@ Type=simple
 User=root
 WorkingDirectory=/home/pi/raspi-turntouch
 ExecStart=/usr/bin/python3 /home/pi/raspi-turntouch/monitor.py
+Restart=on-failure
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

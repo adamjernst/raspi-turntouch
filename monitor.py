@@ -63,6 +63,10 @@ class TurnTouchDevice(gatt.Device):
                 retain=True,
             )
 
+    def disconnect_succeeded(self):
+        super().disconnect_succeeded()
+        logger.info("%s: Disconnected", self.mac_address)
+
     def connect_failed(self, error):
         super().connect_failed(error)
         logger.info("%s: Connecting failed with error %s", self.mac_address, error)

@@ -1,14 +1,34 @@
+#!/usr/bin/python3
 import argparse
 import gatt
 import logging
 import json
 import paho.mqtt.client as mqtt
 
+def has_admin():
+    import os
+    if os.name == 'nt':
+        try:
+            # only windows users with admin privileges can read the C:\windows\temp
+            temp = os.listdir(os.sep.join([os.environ.get('SystemRoot','C:\\windows'),'temp']))
+        except:
+            return (os.environ['USERNAME'],False)
+        else:
+            return (os.environ['USERNAME'],True)
+    else:
+        if 'SUDO_USER' in os.environ and os.geteuid() == 0:
+            return (os.environ['SUDO_USER'],True)
+        else:
+            return (os.environ['USERNAME'],False)
+
 BUTTON_STATUS_SERVICE_UUID = "99c31523-dc4f-41b1-bb04-4e4deb81fadd"
 DIRECTIONS = {0: "north", 1: "east", 2: "west", 3: "south"}
 
 logger = logging.getLogger("monitor")
 
+if has_admin() == False:
+    logger.info("requireres root privilege. Stopping now")
+    exit()
 
 class TurnTouchDeviceManager(gatt.DeviceManager):
     def __init__(self, mqtt_client, **kwargs):

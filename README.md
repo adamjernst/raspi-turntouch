@@ -27,31 +27,31 @@ Launch the listener with:
 It should connect, and once it has you should be able to press buttons on your Turn Touch and see the output of your commands.
 
 
-## Controllers
+~~## Controllers~~
 
-To see what controllers are available, run
+~~To see what controllers are available, run~~
 
-```sudo python3 monitor.py -l```
+~~```sudo python3 monitor.py -l```~~
 
-To see help for setting up commands for a controller, run, e.g.
+~~To see help for setting up commands for a controller, run, e.g.~~
 
-```sudo python3 monitor.py -c hue```
+~~```sudo python3 monitor.py -c hue```~~
 
-and then to set them up, run, e.g.
+~~and then to set them up, run, e.g.~~
 
-```sudo python3 monitor.py -s hue```
+~~```sudo python3 monitor.py -s hue```~~
 
-Most controllers that connect to a device will need some kind of setup. Controllers will often print out helpful information (such as available bulbs, thermostats) after setup.
+~~Most controllers that connect to a device will need some kind of setup. Controllers will often print out helpful information (such as available bulbs, thermostats) after setup.~~
 
-## Battery Status
+~~## Battery Status~~
 
-The battery status is checked every hour. If you would like something to happen when it falls below a certain value, use the following:
+~~The battery status is checked every hour. If you would like something to happen when it falls below a certain value, use the following:~~
 
-```yaml
-battery_10: # will trigger when battery level falls to 10%
-    type: bash
-    command: email_me.sh
-```
+~~```yaml~~
+~~battery_10: # will trigger when battery level falls to 10%~~
+~~    type: bash~~
+~~    command: email_me.sh~~
+~~```~~
 
 ## Running on boot
 
@@ -68,24 +68,24 @@ You can see log output at `/var/log/turntouch.log`.
 
 Make sure you have set up credentials for services such as Nest and Hue before doing this!
 
-## Writing your own controller
+~~## Writing your own controller~~
 
-* Decide on a name for your controller. In this example it is `custom`. This key must be used in the filename and `config.yml` entries.
-* Create `controllers/custom_controller.py`
-* Create a class called, e.b. `CustomController`. It *must* inherit from `BaseController`.
-* Implement `perform(self, action)`, where action is a dict as passed from `config.yml`, and `init` for setup.
-* In `config.yml`, simply address your controller as follows:
+~~* Decide on a name for your controller. In this example it is `custom`. This key must be used in the filename and `config.yml` entries.~~
+~~* Create `controllers/custom_controller.py`~~
+~~* Create a class called, e.b. `CustomController`. It *must* inherit from `BaseController`.~~
+~~* Implement `perform(self, action)`, where action is a dict as passed from `config.yml`, and `init` for setup.~~
+~~* In `config.yml`, simply address your controller as follows:~~
 
-```yaml
-north_press:
-    type: custom
-    arg1: Whatever you want
-    another_arg:
-        - can
-        - even
-        - be
-        - a
-        - list
-```
+~~```yaml~~
+~~north_press:~~
+~~    type: custom~~
+~~    arg1: Whatever you want~~
+~~    another_arg:~~
+~~        - can~~
+~~        - even~~
+~~        - be~~
+~~        - a~~
+~~        - list~~
+~~```~~
 
-If your controller is used for a common action, service or product, consider submitting a pull request!
+~~If your controller is used for a common action, service or product, consider submitting a pull request!~~
